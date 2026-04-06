@@ -1,12 +1,23 @@
 export default async function handler(req, res) {
-  // On détecte la destination selon l'URL
-  let targetBase = "https://testnet.binance.vision";
-  if (req.url.includes("discord.com")) targetBase = "https://discord.com";
-  if (req.url.includes("mistral.ai")) targetBase = "https://api.mistral.ai";
-  if (req.url.includes("cryptopanic.com")) targetBase = "https://cryptopanic.com";
-  const url = targetBase + req.url;
+  const urlPath = req.url;
+  let targetBase = "";
+  // Détection de la destination via le "Panneau de Signalisation"
+  if (urlPath.includes("/api-binance")) {
+    targetBase = "https://testnet.binance.vision";
+  } else if (urlPath.includes("/api-discord")) {
+    targetBase = "https://discord.com";
+  } else if (urlPath.includes("/api-mistral")) {
+    targetBase = "https://api.mistral.ai";
+  } else if (urlPath.includes("/api-news")) {
+    targetBase = "https://cryptopanic.com";
+  }
+  if (!targetBase) {
+    return res.status(404).json({ error: "Destination non reconnue" });
+  }
+  // On nettoie l'URL pour la destination finale
+  const finalUrl = targetBase + urlPath.replace(/\/api-(binance|discord|mistral|news)/, "");
   try {
-    const response = await fetch(url, {
+    const response = await fetch(finalUrl, {
       method: req.method,
       headers: {
         'Authorization': req.headers['authorization'] || '',
